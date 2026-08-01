@@ -1,0 +1,16 @@
+[submodule "tg_owt"]
+	path = tg_owt
+	url = git@github.com:rustedsword/tg_owt.git
+	branch = tgowt_ubuntu
+[submodule "tde2e"]
+	path = tde2e
+	url = git@github.com:rustedsword/td.git
+	branch = tde2e_ubuntu
+[submodule "rnnoise"]
+	path = rnnoise
+	url = git@github.com:rustedsword/rnnoise.git
+	branch = rnnoise_ubuntu
+[submodule "tdesktop"]
+	path = tdesktop
+	url = git@github.com:rustedsword/tdesktop.git
+	branch = tdesktop_ubuntu
