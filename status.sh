@@ -43,7 +43,7 @@ contains_pin() {
 
 echo "== pinned by tdesktop vs packaged =="
 printf '  %-12s %-10s %-8s %s\n' component pinned state version
-for pair in "tg_owt tg_owt" "tde2e tde2e" "rnnoise rnnoise"; do
+for pair in "tg_owt tg_owt" "tde2e tde2e" "rnnoise rnnoise" "tlottie tlottie"; do
     set -- $pair
     pin="$(pinned_commit "$1")"
     ver="$(packaged_version "$2")"

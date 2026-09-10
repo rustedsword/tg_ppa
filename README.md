@@ -1,13 +1,13 @@
 # tg_ppa
 
-Ubuntu 26.04 (resolute) packaging of **Telegram Desktop** and the three libraries it needs
+Ubuntu 26.04 (resolute) packaging of **Telegram Desktop** and the four libraries it needs
 that no distribution ships, for **amd64 and arm64**, published to
 [ppa:lightofmysoul/tg](https://launchpad.net/~lightofmysoul/+archive/ubuntu/tg).
 
 Upstream provides no official arm64 build, and Ubuntu removed `telegram-desktop` from the
 archive in January 2023 in favour of the snap. Debian still maintains a package, but it is
-pinned to upstream 5.7.2 (November 2024) — Telegram Desktop 7.x needs `tde2e`, a library that
-is in no distribution at all.
+pinned to upstream 5.7.2 (November 2024) — Telegram Desktop 7.x needs `tde2e` and, since
+7.2.7, `tlottie`, neither of which is in any distribution at all.
 
 `ANALYSIS.md` records how this was scoped and why each decision was made.
 
@@ -21,9 +21,10 @@ commit Telegram Desktop pins, with a single packaging commit on top.
 | `tg_owt/` | `rustedsword/tg_owt` | `tgowt_ubuntu` | `libtgowt-dev` |
 | `tde2e/` | `rustedsword/td` | `tde2e_ubuntu` | `libtde2e-dev` |
 | `rnnoise/` | `rustedsword/rnnoise` | `rnnoise_ubuntu` | `librnnoise-dev` |
+| `tlottie/` | `rustedsword/tlottie` | `tlottie_ubuntu` | `libtlottie-dev` |
 | `tdesktop/` | `rustedsword/tdesktop` | `tdesktop_ubuntu` | `telegram-desktop` |
 
-All four are **native** Debian packages: the checked-out tree *is* the source, so there is no
+All five are **native** Debian packages: the checked-out tree *is* the source, so there is no
 orig tarball, no `+ds` repack and no quilt patch stack. An Ubuntu-specific fix is an ordinary
 commit on the branch.
 
@@ -32,7 +33,7 @@ commit on the branch.
 ```
 git clone git@github.com:rustedsword/tg_ppa.git
 cd tg_ppa
-git submodule update --init                      # the four packaging trees
+git submodule update --init                      # the five packaging trees
 ```
 
 Do **not** use `--recursive` unless you mean it: `tdesktop` has 36 submodules of its own and
@@ -43,7 +44,7 @@ git -C tdesktop submodule update --init --recursive
 git -C tg_owt   submodule update --init src/third_party/libyuv src/third_party/crc32c/src
 ```
 
-`tde2e` and `rnnoise` have no submodules.
+`tde2e`, `rnnoise` and `tlottie` have no submodules.
 
 ## Building and publishing
 
@@ -58,9 +59,9 @@ cd tg_owt
 ./publish.sh --help
 ```
 
-Publish order matters on a first run: `libtgowt`, `tde2e` and `rnnoise` must reach the PPA
-before `telegram-desktop` can build against them. Launchpad handles the sequencing itself —
-the dependent build waits in *Dependency wait* and retries automatically.
+Publish order matters on a first run: `libtgowt`, `tde2e`, `rnnoise` and `tlottie` must
+reach the PPA before `telegram-desktop` can build against them. Launchpad handles the
+sequencing itself — the dependent build waits in *Dependency wait* and retries automatically.
 
 See each submodule's `PACKAGING.md` for what is specific to it.
 
@@ -82,6 +83,7 @@ whether our branch still contains that commit, and what the PPA currently holds.
    git rebase --onto <new-pin> <old-pin> <branch>
    ```
    then `dch -v 0~git<date>.<short-sha>+ppa1~resolute1 --distribution resolute "..."`.
+   `tlottie` additionally needs its `vendor/` stubs regenerated — see its `PACKAGING.md`.
 4. `./publish.sh --test-build` each changed package, then publish.
 5. Update the submodule pointers here and commit.
 

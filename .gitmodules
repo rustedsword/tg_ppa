@@ -14,3 +14,7 @@
 	path = tdesktop
 	url = git@github.com:rustedsword/tdesktop.git
 	branch = tdesktop_ubuntu
+[submodule "tlottie"]
+	path = tlottie
+	url = git@github.com:rustedsword/tlottie.git
+	branch = tlottie_ubuntu
