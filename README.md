@@ -7,21 +7,24 @@ that no distribution ships, for **amd64 and arm64**, published to
 Upstream provides no official arm64 build, and Ubuntu removed `telegram-desktop` from the
 archive in January 2023 in favour of the snap. Debian still maintains a package, but it is
 pinned to upstream 5.7.2 (November 2024) — Telegram Desktop 7.x needs `tde2e` and, since
-7.2.7, `tlottie`, neither of which is in any distribution at all.
+7.2.7, `tlottie`, and since 7.3.0 `wallet-engine`, none of which is in any distribution.
 
 `ANALYSIS.md` records how this was scoped and why each decision was made.
 
 ## Layout
 
 Each submodule is an upstream repository forked to `rustedsword`, checked out at the exact
-commit Telegram Desktop pins, with a single packaging commit on top.
+commit Telegram Desktop pins, with a single packaging commit on top. The exception is
+`tdesktop_rust/`: Telegram Desktop links its Rust libraries as one archive whose crate its
+build recipes generate, so that repository is the generated crate with `tlottie` and
+`wallet-engine` as submodules at their pins.
 
 | path | fork | branch | produces |
 |---|---|---|---|
 | `tg_owt/` | `rustedsword/tg_owt` | `tgowt_ubuntu` | `libtgowt-dev` |
 | `tde2e/` | `rustedsword/td` | `tde2e_ubuntu` | `libtde2e-dev` |
 | `rnnoise/` | `rustedsword/rnnoise` | `rnnoise_ubuntu` | `librnnoise-dev` |
-| `tlottie/` | `rustedsword/tlottie` | `tlottie_ubuntu` | `libtlottie-dev` |
+| `tdesktop_rust/` | `rustedsword/tdesktop_rust` | `tdesktop_rust_ubuntu` | `libtdesktop-rust-dev` |
 | `tdesktop/` | `rustedsword/tdesktop` | `tdesktop_ubuntu` | `telegram-desktop` |
 
 All five are **native** Debian packages: the checked-out tree *is* the source, so there is no
@@ -42,9 +45,10 @@ pulls a couple of GB. Initialise those only when building it:
 ```
 git -C tdesktop submodule update --init --recursive
 git -C tg_owt   submodule update --init src/third_party/libyuv src/third_party/crc32c/src
+GIT_LFS_SKIP_SMUDGE=1 git -C tdesktop_rust submodule update --init
 ```
 
-`tde2e`, `rnnoise` and `tlottie` have no submodules.
+`tde2e` and `rnnoise` have no submodules.
 
 ## Building and publishing
 
@@ -59,9 +63,10 @@ cd tg_owt
 ./publish.sh --help
 ```
 
-Publish order matters on a first run: `libtgowt`, `tde2e`, `rnnoise` and `tlottie` must
-reach the PPA before `telegram-desktop` can build against them. Launchpad handles the
-sequencing itself — the dependent build waits in *Dependency wait* and retries automatically.
+**Publish order matters.** Upload the libraries first — `libtgowt`, `tde2e`, `rnnoise`,
+`tdesktop-rust`, whichever changed — and wait until their builds are *published* on the PPA
+before uploading `telegram-desktop`. Uploaded together, `telegram-desktop` fails into
+*Dependency wait*, and Launchpad only retries that queue about once an hour.
 
 See each submodule's `PACKAGING.md` for what is specific to it.
 
@@ -83,8 +88,10 @@ whether our branch still contains that commit, and what the PPA currently holds.
    git rebase --onto <new-pin> <old-pin> <branch>
    ```
    then `dch -v 0~git<date>.<short-sha>+ppa1~resolute1 --distribution resolute "..."`.
-   `tlottie` additionally needs its `vendor/` stubs regenerated — see its `PACKAGING.md`.
-4. `./publish.sh --test-build` each changed package, then publish.
+   `tdesktop_rust` has no upstream to rebase onto: check its submodules out at the new pins
+   and re-vendor — see its `PACKAGING.md`.
+4. `./publish.sh --test-build` each changed package, then publish: the libraries first, and
+   `telegram-desktop` only once their builds are published.
 5. Update the submodule pointers here and commit.
 
 Keeping exactly one packaging commit per branch is what makes step 3 a one-liner. Squash if a

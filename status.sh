@@ -16,14 +16,21 @@ command -v jq   >/dev/null || { echo "need jq"   >&2; exit 1; }
 
 PREPARE="${ROOT}/tdesktop/Telegram/build/prepare/prepare.py"
 
-# The commit each stage('<name>', ...) block checks out in prepare.py.
+# The commit each stage('<name>', ...) block checks out in prepare.py, either
+# literally or through a Python variable such as tlottieRevision.
 pinned_commit() {
     [ -f "${PREPARE}" ] || { echo "?"; return; }
-    awk -v stage="stage('$1'" '
+    local pin
+    pin="$(awk -v stage="stage('$1'" '
         index($0, stage) == 1 { inside = 1; next }
-        inside && /git checkout/ { print $3; exit }
+        inside && /git checkout/ { print ($3 == "\"\"\"" ? $5 : $3); exit }
         inside && /^stage\(/ { exit }
-    ' "${PREPARE}"
+    ' "${PREPARE}")"
+    if [[ "${pin}" =~ ^[0-9a-f]+$ ]] || [ -z "${pin}" ]; then
+        echo "${pin}"
+    else
+        sed -n "s/^${pin} = '\([0-9a-f]*\)'$/\1/p" "${PREPARE}"
+    fi
 }
 
 # What our branch is built from, per debian/changelog.
@@ -42,11 +49,14 @@ contains_pin() {
 }
 
 echo "== pinned by tdesktop vs packaged =="
-printf '  %-12s %-10s %-8s %s\n' component pinned state version
-for pair in "tg_owt tg_owt" "tde2e tde2e" "rnnoise rnnoise" "tlottie tlottie"; do
-    set -- $pair
+printf '  %-14s %-10s %-8s %s\n' component pinned state version
+# stage, checkout holding the pin, package
+for triple in "tg_owt tg_owt tg_owt" "tde2e tde2e tde2e" "rnnoise rnnoise rnnoise" \
+        "tlottie tdesktop_rust/tlottie tdesktop_rust" \
+        "wallet-engine tdesktop_rust/wallet-engine tdesktop_rust"; do
+    set -- $triple
     pin="$(pinned_commit "$1")"
-    ver="$(packaged_version "$2")"
+    ver="$(packaged_version "$3")"
     if [ -z "${pin}" ] || [ "${pin}" = "?" ]; then
         state="no-pin"
     elif contains_pin "$2" "${pin}"; then
@@ -54,7 +64,7 @@ for pair in "tg_owt tg_owt" "tde2e tde2e" "rnnoise rnnoise" "tlottie tlottie"; d
     else
         state="DRIFT"
     fi
-    printf '  %-12s %-10s %-8s %s\n' "$1" "${pin:0:9}" "${state}" "${ver}"
+    printf '  %-14s %-10s %-8s %s\n' "$1" "${pin:0:9}" "${state}" "${ver}"
 done
 
 echo "== ppa:${PPA_OWNER}/${PPA_NAME} =="
