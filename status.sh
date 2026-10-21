@@ -70,7 +70,7 @@ done
 echo "== ppa:${PPA_OWNER}/${PPA_NAME} =="
 curl -fsSG "${LP}/~${PPA_OWNER}/+archive/ubuntu/${PPA_NAME}" \
     --data-urlencode "ws.op=getPublishedSources" \
-| jq -r '.entries[] | [.source_package_name, .source_package_version, .status] | @tsv' \
+| jq -r '.entries[] | [.source_package_name, (.distro_series_link | split("/") | last), .source_package_version, .status] | @tsv' \
 | column -t -s "$(printf '\t')" | sed 's/^/  /'
 
 echo "== builds =="

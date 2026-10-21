@@ -1,7 +1,7 @@
 # tg_ppa
 
-Ubuntu 26.04 (resolute) packaging of **Telegram Desktop** and the four libraries it needs
-that no distribution ships, for **amd64 and arm64**, published to
+Ubuntu 26.04 (resolute) and 26.10 (stonking) packaging of **Telegram Desktop** and the four
+libraries it needs that no distribution ships, for **amd64 and arm64**, published to
 [ppa:lightofmysoul/tg](https://launchpad.net/~lightofmysoul/+archive/ubuntu/tg).
 
 Upstream provides no official arm64 build, and Ubuntu removed `telegram-desktop` from the
@@ -53,8 +53,8 @@ GIT_LFS_SKIP_SMUDGE=1 git -C tdesktop_rust submodule update --init
 ## Building and publishing
 
 Each submodule carries its own `publish.sh`, `inside-container.sh` and `Containerfile`. All
-Debian work happens inside an Ubuntu 26.04 podman container, so the host can be anything —
-these were developed on Gentoo.
+Debian work happens inside an Ubuntu podman container of the series being built, so the host
+can be anything — these were developed on Gentoo.
 
 ```
 cd tg_owt
@@ -62,6 +62,11 @@ cd tg_owt
 ./publish.sh                             # sign and upload; Launchpad builds the binaries
 ./publish.sh --help
 ```
+
+`publish.sh` builds and uploads every series in its `SERIES` list, resolute and stonking.
+`debian/changelog` always targets resolute; `inside-container.sh` retargets a copy of it for
+stonking, so `…+ppa1~resolute1` goes to stonking as `…+ppa1~stonking1`. `--series NAME`
+builds one series only. To add a series, add it to `SERIES` in all five `publish.sh`.
 
 **Publish order matters.** Upload the libraries first — `libtgowt`, `tde2e`, `rnnoise`,
 `tdesktop-rust`, whichever changed — and wait until their builds are *published* on the PPA
@@ -103,7 +108,8 @@ change adds more.
 
 No hyphens — a native package takes no Debian revision. The leading `0~` sorts below any
 future official package of the same name, so a real Ubuntu or Debian package would supersede
-ours cleanly. `~resolute1` sorts below `~stonking1` if more series are added later.
+ours cleanly. `~resolute1` sorts below `~stonking1`, so upgrading Ubuntu upgrades the
+packages.
 
 ## Prerequisites
 
