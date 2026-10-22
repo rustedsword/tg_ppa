@@ -67,6 +67,8 @@ cd tg_owt
 `debian/changelog` always targets resolute; `inside-container.sh` retargets a copy of it for
 stonking, so `…+ppa1~resolute1` goes to stonking as `…+ppa1~stonking1`. `--series NAME`
 builds one series only. To add a series, add it to `SERIES` in all five `publish.sh`.
+`rnnoise` is resolute-only: stonking's universe ships rnnoise 0.2, which `telegram-desktop`
+builds against there.
 
 **Publish order matters.** Upload the libraries first — `libtgowt`, `tde2e`, `rnnoise`,
 `tdesktop-rust`, whichever changed — and wait until their builds are *published* on the PPA
