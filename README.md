@@ -73,6 +73,9 @@ builds one series only. To add a series, add it to `SERIES` in all five `publish
 before uploading `telegram-desktop`. Uploaded together, `telegram-desktop` fails into
 *Dependency wait*, and Launchpad only retries that queue about once an hour.
 
+**Upload one package at a time.** Parallel `publish.sh` runs make Launchpad's FTP server
+reject files with "Upload permissions error", leaving a broken upload to retry.
+
 See each submodule's `PACKAGING.md` for what is specific to it.
 
 ## Status
