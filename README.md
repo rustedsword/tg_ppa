@@ -87,12 +87,15 @@ See each submodule's `PACKAGING.md` for what is specific to it.
 ```
 
 Reports the commit each library is pinned at by `tdesktop/Telegram/build/prepare/prepare.py`,
-whether our branch still contains that commit, and what the PPA currently holds.
+whether our branch still contains that commit, whether `tdesktop_rust`'s copy of
+`wallet-engine.patch` matches the pinned desktop-app/patches commit, and what the PPA
+currently holds.
 
 ## Following a new Telegram Desktop release
 
 1. `git -C tdesktop fetch origin --tags` and rebase `tdesktop_ubuntu` onto the new tag.
-2. `./status.sh` — any library whose pin moved shows `DRIFT`.
+2. `./status.sh` — any library whose pin moved shows `DRIFT`, as does `wallet-engine.patch`
+   when the new patches pin changed it; refresh it as `tdesktop_rust/PACKAGING.md` describes.
 3. For each drifted library, rebase its single packaging commit onto the newly pinned commit:
    ```
    git rebase --onto <new-pin> <old-pin> <branch>

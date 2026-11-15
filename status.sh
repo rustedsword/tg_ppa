@@ -49,7 +49,7 @@ contains_pin() {
 }
 
 echo "== pinned by tdesktop vs packaged =="
-printf '  %-14s %-10s %-8s %s\n' component pinned state version
+printf '  %-19s %-10s %-8s %s\n' component pinned state version
 # stage, checkout holding the pin, package
 for triple in "tg_owt tg_owt tg_owt" "tde2e tde2e tde2e" "rnnoise rnnoise rnnoise" \
         "tlottie tdesktop_rust/tlottie tdesktop_rust" \
@@ -64,8 +64,21 @@ for triple in "tg_owt tg_owt tg_owt" "tde2e tde2e tde2e" "rnnoise rnnoise rnnois
     else
         state="DRIFT"
     fi
-    printf '  %-14s %-10s %-8s %s\n' "$1" "${pin:0:9}" "${state}" "${ver}"
+    printf '  %-19s %-10s %-8s %s\n' "$1" "${pin:0:9}" "${state}" "${ver}"
 done
+
+# tdesktop_rust carries a copy of wallet-engine.patch from the desktop-app/patches pin.
+pin="$(pinned_commit patches)"
+if [ -z "${pin}" ] || [ "${pin}" = "?" ]; then
+    state="no-pin"
+elif ! upstream="$(curl -fsSL "https://raw.githubusercontent.com/desktop-app/patches/${pin}/wallet-engine.patch")"; then
+    state="no-fetch"
+elif [ "${upstream}" = "$(<"${ROOT}/tdesktop_rust/debian/patches/wallet-engine.patch")" ]; then
+    state="ok"
+else
+    state="DRIFT"
+fi
+printf '  %-19s %-10s %-8s %s\n' wallet-engine.patch "${pin:0:9}" "${state}" "$(packaged_version tdesktop_rust)"
 
 echo "== ppa:${PPA_OWNER}/${PPA_NAME} =="
 curl -fsSG "${LP}/~${PPA_OWNER}/+archive/ubuntu/${PPA_NAME}" \
