@@ -103,9 +103,17 @@ currently holds.
    then `dch -v 0~git<date>.<short-sha>+ppa1~resolute1 --distribution resolute "..."`.
    `tdesktop_rust` has no upstream to rebase onto: check its submodules out at the new pins
    and re-vendor — see its `PACKAGING.md`.
-4. `./publish.sh --test-build` each changed package, then publish: the libraries first, and
+4. `tdesktop/vendor/` holds the crates.io crates of the widget helper's Rust code. When
+   twidget's `rust/Cargo.lock` changes, re-vendor with `.cargo/config.toml` out of the way,
+   then update the `vendor/` paragraphs of `debian/copyright`:
+   ```
+   cd tdesktop && mv .cargo/config.toml .cargo/config.toml.off && rm -rf vendor
+   cargo vendor --locked --manifest-path Telegram/ThirdParty/twidget/rust/Cargo.toml vendor
+   mv .cargo/config.toml.off .cargo/config.toml
+   ```
+5. `./publish.sh --test-build` each changed package, then publish: the libraries first, and
    `telegram-desktop` only once their builds are published.
-5. Update the submodule pointers here and commit.
+6. Update the submodule pointers here and commit.
 
 Keeping exactly one packaging commit per branch is what makes step 3 a one-liner. Squash if a
 change adds more.
